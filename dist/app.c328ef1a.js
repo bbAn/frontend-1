@@ -130,30 +130,51 @@ function getData(url) {
 
   ajax.send();
   return JSON.parse(ajax.response);
-}
+} //글 목록 화면을 재활용하기위해 코드를 묶음
 
-var newsFeed = getData(NEWS_URL);
-var ul = document.createElement('ul');
-window.addEventListener('hashchange', function () {
+
+function newsFeed() {
+  var newsFeed = getData(NEWS_URL);
+  var ul = document.createElement('ul'); //글 목록 화면
+  //DOM API 사용하는 부분을 개선함
+
+  var newsList = [];
+  newsList.push('<ul>');
+
+  for (var i = 0; i < 10; i++) {
+    newsList.push("\n      <li>\n        <a href=\"#".concat(newsFeed[i].id, "\">\n          ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")\n        </a>\n      </li>\n    "));
+  }
+
+  newsList.push('</ul>');
+  container.innerHTML = newsList.join(''); //.join 배열 요소안의 문자열을 하나의 문자열로 연결 시켜주는 함수. , 구분자를 쓸수 있음
+} //글 내용 화면
+
+
+function newsDetail() {
   //hashchange: 해쉬가 바뀌었을 때 발생하는 이벤트
   //window 객체에서 발생
   var id = location.hash.substring(1); //location 객체는 브라우저가 기본으로 제공. 주소와 관련된 다양한 정보 제공
 
-  var newContent = getData(CONTENT_URL.replace('@id', id));
-  var title = document.createElement('h1');
-  title.innerHTML = newContent.title;
-  content.appendChild(title);
-});
+  var newContent = getData(CONTENT_URL.replace('@id', id)); //목록 화면을 상세 내용으로 바꿔줌
 
-for (var i = 0; i < 10; i++) {
-  var div = document.createElement('div');
-  div.innerHTML = "\n  <li>\n    <a href=\"#".concat(newsFeed[i].id, "\">\n      ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")\n    </a>\n  </li>\n  "); // ul.appendChild(div.children[0]); 이렇게 써도 됨
-
-  ul.appendChild(div.firstElementChild);
+  container.innerHTML = "\n    <h1>".concat(newContent.title, "</h1>\n    <div>\n      <a href=\"#\">\uBAA9\uB85D\uC73C\uB85C</a>\n    </div>\n  ");
 }
 
-container.appendChild(ul);
-container.appendChild(content);
+;
+
+function router() {
+  var routePath = location.hash;
+
+  if (routePath === '') {
+    newsFeed();
+  } else {
+    newsDetail();
+  } //목록으로의 값은 #인데 location.hash에 #이 들어왔을텐데 참이 된 이유는 #만 있으면 빈 값을 반환함
+
+}
+
+window.addEventListener('hashchange', router);
+router();
 },{}],"../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
