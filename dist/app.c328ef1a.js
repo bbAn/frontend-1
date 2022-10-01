@@ -132,8 +132,7 @@ function getData(url) {
   return JSON.parse(ajax.response);
 }
 
-var newsFeed = getData(NEWS_URL); //
-
+var newsFeed = getData(NEWS_URL);
 var ul = document.createElement('ul');
 window.addEventListener('hashchange', function () {
   //hashchange: 해쉬가 바뀌었을 때 발생하는 이벤트
@@ -148,7 +147,7 @@ window.addEventListener('hashchange', function () {
 
 for (var i = 0; i < 10; i++) {
   var div = document.createElement('div');
-  div.innerHTML = "\n  <li>\n    <a href=\"#".concat(newsFeed[i].id, "\">title (comments)\n      ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")\n    </a>\n  </li>\n  "); // ul.appendChild(div.children[0]); 이렇게 써도 됨
+  div.innerHTML = "\n  <li>\n    <a href=\"#".concat(newsFeed[i].id, "\">\n      ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")\n    </a>\n  </li>\n  "); // ul.appendChild(div.children[0]); 이렇게 써도 됨
 
   ul.appendChild(div.firstElementChild);
 }

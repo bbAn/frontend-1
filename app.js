@@ -14,7 +14,7 @@ function getData(url) {
 }
 
 
-const newsFeed = getData(NEWS_URL); //
+const newsFeed = getData(NEWS_URL);
 const ul = document.createElement('ul');
 
 window.addEventListener('hashchange', function() {
@@ -36,7 +36,7 @@ for(let i = 0; i < 10; i++) {
 
   div.innerHTML = `
   <li>
-    <a href="#${newsFeed[i].id}">title (comments)
+    <a href="#${newsFeed[i].id}">
       ${newsFeed[i].title} (${newsFeed[i].comments_count})
     </a>
   </li>
