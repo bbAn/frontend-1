@@ -118,19 +118,42 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
   return newRequire;
 })({"app.js":[function(require,module,exports) {
+var container = document.getElementById('root');
 var ajax = new XMLHttpRequest();
-ajax.open('GET', 'https://api.hnpwa.com/v0/news/1.json', false);
+var content = document.createElement('div');
+var NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json'; //해커뉴스 API
+
+var CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json'; //해커뉴스 상세 내용
+
+ajax.open('GET', NEWS_URL, false); //해커뉴스 API를 가져온다
+
 ajax.send();
 var newsFeed = JSON.parse(ajax.response);
 var ul = document.createElement('ul');
+window.addEventListener('hashchange', function () {
+  //hashchange: 해쉬가 바뀌었을 때 발생하는 이벤트
+  //window 객체에서 발생
+  var id = location.hash.substring(1); //location 객체는 브라우저가 기본으로 제공. 주소와 관련된 다양한 정보 제공
+
+  ajax.open('GET', CONTENT_URL.replace('@id', id), false);
+  ajax.send();
+  var newsContent = JSON.parse(ajax.response);
+  var title = document.createElement('h1');
+  title.innerHTML = newsContent.title;
+  content.appendChild(title);
+});
 
 for (var i = 0; i < 10; i++) {
   var li = document.createElement('li');
-  li.innerHTML = newsFeed[i].title;
+  var a = document.createElement('a');
+  a.href = "#".concat(newsFeed[i].id);
+  a.innerHTML = "".concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")");
+  li.appendChild(a);
   ul.appendChild(li);
 }
 
-document.getElementById('root').appendChild(ul);
+container.appendChild(ul);
+container.appendChild(content);
 },{}],"../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
