@@ -20,12 +20,20 @@ function getData(url) {
 function newsFeed() {
   
   const newsFeed = getData(NEWS_URL);
-  const ul = document.createElement('ul');
-
-  //글 목록 화면
-  //DOM API 사용하는 부분을 개선함
   const newsList = [];
-  newsList.push('<ul>');
+  // template를 사용해 분리하면 구조를 명확하게 파악 수 있고 복잡도를 줄일 수 있음
+  let template = `
+    <div>
+      <h1>Kacker News</h1>
+      <ul>
+        {{__news_feed__}}
+      </ul>
+      <div>
+        <a href="#/page/{{__prev_page__}}">이전 페이지</a>
+        <a href="#/page/{{__next_page__}}">다음 페이지</a>
+      </div>
+    </div>
+  `;
 
   for(let i = (store.currentPage -1) * 10; i < store.currentPage * 10; i++) {
     newsList.push( `
@@ -36,17 +44,13 @@ function newsFeed() {
       </li>
     `);
   }
-
-  newsList.push('</ul>');
-  newsList.push(`
-    <div>
-      <a href="#/page/${store.currentPage > 1 ? store.currentPage - 1 : 1}">이전 페이지</a>
-      <a href="#/page/${store.currentPage < 3 ? store.currentPage + 1 : store.currentPage}">다음 페이지</a>
-    </div>
-  `);
-
-  container.innerHTML = newsList.join('');
+  
+  template = template.replace('{{__news_feed__}}', newsList.join(''));
   //.join 배열 요소안의 문자열을 하나의 문자열로 연결 시켜주는 함수. , 구분자를 쓸수 있음
+  template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
+  template = template.replace('{{__next_page__}}', store.currentPage + 1);
+  
+  container.innerHTML = template;
 }
 
 //글 내용 화면

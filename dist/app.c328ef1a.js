@@ -139,19 +139,19 @@ function getData(url) {
 
 function newsFeed() {
   var newsFeed = getData(NEWS_URL);
-  var ul = document.createElement('ul'); //글 목록 화면
-  //DOM API 사용하는 부분을 개선함
+  var newsList = []; // template를 사용해 분리하면 구조를 명확하게 파악 수 있고 복잡도를 줄일 수 있음
 
-  var newsList = [];
-  newsList.push('<ul>');
+  var template = "\n    <div>\n      <h1>Kacker News</h1>\n      <ul>\n        {{__news_feed__}}\n      </ul>\n      <div>\n        <a href=\"#/page/{{__prev_page__}}\">\uC774\uC804 \uD398\uC774\uC9C0</a>\n        <a href=\"#/page/{{__next_page__}}\">\uB2E4\uC74C \uD398\uC774\uC9C0</a>\n      </div>\n    </div>\n  ";
 
   for (var i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++) {
     newsList.push("\n      <li>\n        <a href=\"#/show/".concat(newsFeed[i].id, "\">\n          ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")\n        </a>\n      </li>\n    "));
   }
 
-  newsList.push('</ul>');
-  newsList.push("\n    <div>\n      <a href=\"#/page/".concat(store.currentPage > 1 ? store.currentPage - 1 : 1, "\">\uC774\uC804 \uD398\uC774\uC9C0</a>\n      <a href=\"#/page/").concat(store.currentPage < 3 ? store.currentPage + 1 : store.currentPage, "\">\uB2E4\uC74C \uD398\uC774\uC9C0</a>\n    </div>\n  "));
-  container.innerHTML = newsList.join(''); //.join 배열 요소안의 문자열을 하나의 문자열로 연결 시켜주는 함수. , 구분자를 쓸수 있음
+  template = template.replace('{{__news_feed__}}', newsList.join('')); //.join 배열 요소안의 문자열을 하나의 문자열로 연결 시켜주는 함수. , 구분자를 쓸수 있음
+
+  template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
+  template = template.replace('{{__next_page__}}', store.currentPage + 1);
+  container.innerHTML = template;
 } //글 내용 화면
 
 
