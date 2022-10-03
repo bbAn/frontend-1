@@ -125,6 +125,10 @@ var NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json'; //해커뉴스 API
 
 var CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json'; //해커뉴스 상세 내용
 
+var store = {
+  currentPage: 1
+};
+
 function getData(url) {
   ajax.open('GET', url, false); //해커뉴스 API를 가져온다
 
@@ -141,11 +145,12 @@ function newsFeed() {
   var newsList = [];
   newsList.push('<ul>');
 
-  for (var i = 0; i < 10; i++) {
-    newsList.push("\n      <li>\n        <a href=\"#".concat(newsFeed[i].id, "\">\n          ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")\n        </a>\n      </li>\n    "));
+  for (var i = (store.currentPage - 1) * 10; i < store.currentPage * 10; i++) {
+    newsList.push("\n      <li>\n        <a href=\"#/show/".concat(newsFeed[i].id, "\">\n          ").concat(newsFeed[i].title, " (").concat(newsFeed[i].comments_count, ")\n        </a>\n      </li>\n    "));
   }
 
   newsList.push('</ul>');
+  newsList.push("\n    <div>\n      <a href=\"#/page/".concat(store.currentPage > 1 ? store.currentPage - 1 : 1, "\">\uC774\uC804 \uD398\uC774\uC9C0</a>\n      <a href=\"#/page/").concat(store.currentPage < 3 ? store.currentPage + 1 : store.currentPage, "\">\uB2E4\uC74C \uD398\uC774\uC9C0</a>\n    </div>\n  "));
   container.innerHTML = newsList.join(''); //.join 배열 요소안의 문자열을 하나의 문자열로 연결 시켜주는 함수. , 구분자를 쓸수 있음
 } //글 내용 화면
 
@@ -153,11 +158,11 @@ function newsFeed() {
 function newsDetail() {
   //hashchange: 해쉬가 바뀌었을 때 발생하는 이벤트
   //window 객체에서 발생
-  var id = location.hash.substring(1); //location 객체는 브라우저가 기본으로 제공. 주소와 관련된 다양한 정보 제공
+  var id = location.hash.substring(7); //location 객체는 브라우저가 기본으로 제공. 주소와 관련된 다양한 정보 제공
 
   var newContent = getData(CONTENT_URL.replace('@id', id)); //목록 화면을 상세 내용으로 바꿔줌
 
-  container.innerHTML = "\n    <h1>".concat(newContent.title, "</h1>\n    <div>\n      <a href=\"#\">\uBAA9\uB85D\uC73C\uB85C</a>\n    </div>\n  ");
+  container.innerHTML = "\n    <h1>".concat(newContent.title, "</h1>\n    <div>\n      <a href=\"#/page/").concat(store.currentPage, "\">\uBAA9\uB85D\uC73C\uB85C</a>\n    </div>\n  ");
 }
 
 ;
@@ -166,6 +171,9 @@ function router() {
   var routePath = location.hash;
 
   if (routePath === '') {
+    newsFeed();
+  } else if (routePath.indexOf('#/page/') >= 0) {
+    store.currentPage = Number(routePath.substring(7));
     newsFeed();
   } else {
     newsDetail();
