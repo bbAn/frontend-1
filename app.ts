@@ -1,13 +1,30 @@
+//Type Aliases (타입별칭, 별명)
+type Store = { //타이핑하는 식별자들은 대문자로 시작하는 표기법을 많이 사용하고 있음
+  currentPage: number; //세미클론으로 마무리함
+  feeds: NewsFeed[];
+}
 
-const container = document.getElementById('root');
-const ajax = new XMLHttpRequest();
-const content = document.createElement('div');
+type NewsFeed = {
+  id: number;
+  comments_count: number;
+  url: string;
+  time_ago: string;
+  points: number;
+  title: string;
+  read?: boolean; //?를 붙이면 선택속성이됨
+}
+
+const container: HTMLElement | null = document.getElementById('root');
+const ajax: XMLHttpRequest = new XMLHttpRequest();
 const NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json'; //해커뉴스 API
 const CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json'; //해커뉴스 상세 내용 게시글 아이디는 @id로 마킹된 상태
-const store = {
+
+//객체는 Type Aliases, interface를 통해서 타입을 지정할 수 있다
+const store: Store = {
   currentPage: 1,
   feeds: [],
 };
+
 
 function getData(url) {
   ajax.open('GET', url, false); //해커뉴스 API를 가져온다 마지막에 boolean값은 가져오는 데이터를 동기/비동기 처리에 대한 옵션
@@ -23,9 +40,18 @@ function makeFeeds(feeds) {
   return feeds;
 }
 
+//타입가드: 어떤 유형의 값이 2가지가 들어온 케이스에서 그중의 한가지가 null인 케이스를 체크해라
+function updateView(html) {
+  if (container) {
+    container.innerHTML = html;
+  } else {
+    console.error("최상위 컨테이너가 없어 UI를 진행하지 못합니다.");
+  }
+}
+
 //글 목록 화면을 재활용하기위해 코드를 묶음
 function newsFeed() {
-  let newsFeed = store.feeds;
+  let newsFeed: NewsFeed[] = store.feeds;
   const newsList = [];
   // template를 사용해 분리하면 구조를 명확하게 파악 수 있고 복잡도를 줄일 수 있음
   let template = `
@@ -84,7 +110,7 @@ function newsFeed() {
   template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
   template = template.replace('{{__next_page__}}', store.currentPage + 1);
 
-  container.innerHTML = template;
+  updateView(template);
 }
 
 //글 내용 화면
@@ -154,7 +180,7 @@ function makeComment(comments, called = 0) {
 }
 
   //목록 화면을 상세 내용으로 바꿔줌
-  container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
+  updateView(template.replace('{{__comments__}}', makeComment(newsContent.comments)));
 };
 
 //라우터
