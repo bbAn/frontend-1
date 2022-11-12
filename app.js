@@ -3,17 +3,17 @@ const container = document.getElementById('root');
 const ajax = new XMLHttpRequest();
 const content = document.createElement('div');
 const NEWS_URL = 'https://api.hnpwa.com/v0/news/1.json'; //해커뉴스 API
-const CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json'; //해커뉴스 상세 내용
+const CONTENT_URL = 'https://api.hnpwa.com/v0/item/@id.json'; //해커뉴스 상세 내용 게시글 아이디는 @id로 마킹된 상태
 const store = {
   currentPage: 1,
   feeds: [],
 };
 
 function getData(url) {
-  ajax.open('GET', url, false); //해커뉴스 API를 가져온다
-  ajax.send();
+  ajax.open('GET', url, false); //해커뉴스 API를 가져온다 마지막에 boolean값은 가져오는 데이터를 동기/비동기 처리에 대한 옵션
+  ajax.send(); //데이터가 들어옴
 
-  return JSON.parse(ajax.response);
+  return JSON.parse(ajax.response); //JSON형태의 응답값을 객체로 바꿈 (배열)
 }
 
 function makeFeeds(feeds) {
@@ -54,7 +54,8 @@ function newsFeed() {
   `;
 
   if (newsFeed.length === 0) {
-    newsFeed = store.feeds = makeFeeds(getData(NEWS_URL));
+    newsFeed = store.feeds = makeFeeds(getData(NEWS_URL)); 
+    //makeFeeds(getData(NEWS_URL))를 store.feeds, newsFeed에 연속으로 넣을 수 있는 문법
   }
 
   for(let i = (store.currentPage -1) * 10; i < store.currentPage * 10; i++) {
@@ -79,8 +80,7 @@ function newsFeed() {
     `);
   }
 
-  template = template.replace('{{__news_feed__}}', newsList.join(''));
-  //.join 배열 요소안의 문자열을 하나의 문자열로 연결 시켜주는 함수. , 구분자를 쓸수 있음
+  template = template.replace('{{__news_feed__}}', newsList.join('')); //.join 배열 요소안의 문자열을 하나의 문자열로 연결 시켜주는 함수. , 구분자를 쓸수 있음
   template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
   template = template.replace('{{__next_page__}}', store.currentPage + 1);
 
@@ -93,7 +93,7 @@ function newsDetail() {
   //window 객체에서 발생
 
   const id = location.hash.substring(7); //location 객체는 브라우저가 기본으로 제공. 주소와 관련된 다양한 정보 제공
-  const newsContent = getData(CONTENT_URL.replace('@id', id));
+  const newsContent = getData(CONTENT_URL.replace('@id', id)); //@id로 마킹해둔것을 실제 id로 바꿔줌
   let template = `
   <div class="bg-gray-600 min-h-screen pb-8">
     <div class="bg-white text-xl">
@@ -146,7 +146,7 @@ function makeComment(comments, called = 0) {
 
     if(comments[i].comments.length > 0) {
       commentString.push(makeComment(comments[i].comments, called + 1));
-      //재귀 호출: 함수가 자기 자신을 호출하는 것
+      //재귀 호출: 함수가 자기 자신을 호출하는 것. 끝을 알 수 없는 구조에서 유용하게 사용할 수 있음
     }
   }
 
@@ -157,10 +157,11 @@ function makeComment(comments, called = 0) {
   container.innerHTML = template.replace('{{__comments__}}', makeComment(newsContent.comments));
 };
 
+//라우터
 function router() {
   const routePath = location.hash;
 
-  if (routePath === '') {
+  if (routePath === '') { //a href에 #만 있는 경우는 값이 없다고 판단함
     newsFeed();
   } else if (routePath.indexOf('#/page/') >= 0) {
     store.currentPage = Number(routePath.substring(7));
