@@ -1,32 +1,31 @@
-//Type Aliases (타입별칭, 별명)
-type Store = { //타이핑하는 식별자들은 대문자로 시작하는 표기법을 많이 사용하고 있음
+interface Store {
   currentPage: number; //세미클론으로 마무리함
   feeds: NewsFeed[];
 }
 
 //중복되는 타입들을 모아둠
-type News = {
-  id: number;
-  time_ago: string;
-  title: string;
-  url: string;
-  user: string;
-  content: string;
+interface News {
+  readonly id: number; //readonly: 코드 내에서 다른 값으로 대체하지 못하게 하는 지시어
+  readonly time_ago: string;
+  readonly title: string;
+  readonly url: string;
+  readonly user: string;
+  readonly content: string;
 }
 
-type NewsFeed = News & {
-  comments_count: number;
-  points: number;
+interface NewsFeed extends News {
+  readonly comments_count: number;
+  readonly points: number;
   read?: boolean; //?를 붙이면 선택속성이됨
 }
 
-type newsDetail = News & {
-  comments: NewsComment[];
+interface newsDetail extends News {
+  readonly comments: NewsComment[];
 }
 
-type NewsComment = News & {
-  comments: NewsComment[];
-  level: number;
+interface NewsComment extends News {
+  readonly comments: NewsComment[];
+  readonly level: number;
 }
 
 const container: HTMLElement | null = document.getElementById('root');
