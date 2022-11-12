@@ -4,14 +4,29 @@ type Store = { //타이핑하는 식별자들은 대문자로 시작하는 표�
   feeds: NewsFeed[];
 }
 
-type NewsFeed = {
+//중복되는 타입들을 모아둠
+type News = {
   id: number;
-  comments_count: number;
-  url: string;
   time_ago: string;
-  points: number;
   title: string;
+  url: string;
+  user: string;
+  content: string;
+}
+
+type NewsFeed = News & {
+  comments_count: number;
+  points: number;
   read?: boolean; //?를 붙이면 선택속성이됨
+}
+
+type newsDetail = News & {
+  comments: NewsComment[];
+}
+
+type NewsComment = News & {
+  comments: NewsComment[];
+  level: number;
 }
 
 const container: HTMLElement | null = document.getElementById('root');
@@ -25,15 +40,15 @@ const store: Store = {
   feeds: [],
 };
 
-
-function getData(url) {
+//제네릭 문법: <>를 사용. 호출하는 쪽에서 유형을 명시해주면 그 유형을 그대로 반환유형으로 사용함
+function getData<AjaxResponse>(url: string): AjaxResponse { 
   ajax.open('GET', url, false); //해커뉴스 API를 가져온다 마지막에 boolean값은 가져오는 데이터를 동기/비동기 처리에 대한 옵션
   ajax.send(); //데이터가 들어옴
 
   return JSON.parse(ajax.response); //JSON형태의 응답값을 객체로 바꿈 (배열)
 }
 
-function makeFeeds(feeds) {
+function makeFeeds(feeds: NewsFeed[]): NewsFeed[] {
   for (let i = 0; i <feeds.length; i++) {
     feeds[i].read = false;
   }
@@ -41,7 +56,7 @@ function makeFeeds(feeds) {
 }
 
 //타입가드: 어떤 유형의 값이 2가지가 들어온 케이스에서 그중의 한가지가 null인 케이스를 체크해라
-function updateView(html) {
+function updateView(html: string): void { //리턴값이 없으면 :void
   if (container) {
     container.innerHTML = html;
   } else {
@@ -50,7 +65,7 @@ function updateView(html) {
 }
 
 //글 목록 화면을 재활용하기위해 코드를 묶음
-function newsFeed() {
+function newsFeed(): void {
   let newsFeed: NewsFeed[] = store.feeds;
   const newsList = [];
   // template를 사용해 분리하면 구조를 명확하게 파악 수 있고 복잡도를 줄일 수 있음
@@ -80,7 +95,7 @@ function newsFeed() {
   `;
 
   if (newsFeed.length === 0) {
-    newsFeed = store.feeds = makeFeeds(getData(NEWS_URL)); 
+    newsFeed = store.feeds = makeFeeds(getData<NewsFeed[]>(NEWS_URL)); 
     //makeFeeds(getData(NEWS_URL))를 store.feeds, newsFeed에 연속으로 넣을 수 있는 문법
   }
 
@@ -107,19 +122,19 @@ function newsFeed() {
   }
 
   template = template.replace('{{__news_feed__}}', newsList.join('')); //.join 배열 요소안의 문자열을 하나의 문자열로 연결 시켜주는 함수. , 구분자를 쓸수 있음
-  template = template.replace('{{__prev_page__}}', store.currentPage > 1 ? store.currentPage - 1 : 1);
-  template = template.replace('{{__next_page__}}', store.currentPage + 1);
+  template = template.replace('{{__prev_page__}}', String(store.currentPage > 1 ? store.currentPage - 1 : 1));
+  template = template.replace('{{__next_page__}}', String(store.currentPage + 1));
 
   updateView(template);
 }
 
 //글 내용 화면
-function newsDetail() {
+function newsDetail(): void {
   //hashchange: 해쉬가 바뀌었을 때 발생하는 이벤트
   //window 객체에서 발생
 
   const id = location.hash.substring(7); //location 객체는 브라우저가 기본으로 제공. 주소와 관련된 다양한 정보 제공
-  const newsContent = getData(CONTENT_URL.replace('@id', id)); //@id로 마킹해둔것을 실제 id로 바꿔줌
+  const newsContent = getData<newsDetail>(CONTENT_URL.replace('@id', id)); //@id로 마킹해둔것을 실제 id로 바꿔줌
   let template = `
   <div class="bg-gray-600 min-h-screen pb-8">
     <div class="bg-white text-xl">
@@ -156,22 +171,28 @@ for (let i = 0; i < store.feeds.length; i++) {
   }
 }
 
-function makeComment(comments, called = 0) {
+  //목록 화면을 상세 내용으로 바꿔줌
+  updateView(template.replace('{{__comments__}}', makeComment(newsContent.comments)));
+};
+
+function makeComment(comments: NewsComment[]): string {
   const commentString = [];
 
   for(let i = 0; i < comments.length; i++) {
+    const comment: NewsComment = comments[i];
+    
     commentString.push(`
-      <div style="padding-left: ${called * 40}px;" class="mt-4">
+      <div style="padding-left: ${comment.level * 40}px;" class="mt-4">
         <div class="text-gray-400">
           <i class="fa fa-sort-up mr-2"></i>
-          <strong>${comments[i].user}</strong> ${comments[i].time_ago}
+          <strong>${comment.user}</strong> ${comment.time_ago}
         </div>
-        <p class="text-gray-700">${comments[i].content}</p>
+        <p class="text-gray-700">${comment.content}</p>
       </div>
     `);
 
-    if(comments[i].comments.length > 0) {
-      commentString.push(makeComment(comments[i].comments, called + 1));
+    if(comment.comments.length > 0) {
+      commentString.push(makeComment(comment.comments));
       //재귀 호출: 함수가 자기 자신을 호출하는 것. 끝을 알 수 없는 구조에서 유용하게 사용할 수 있음
     }
   }
@@ -179,12 +200,8 @@ function makeComment(comments, called = 0) {
   return commentString.join('');
 }
 
-  //목록 화면을 상세 내용으로 바꿔줌
-  updateView(template.replace('{{__comments__}}', makeComment(newsContent.comments)));
-};
-
 //라우터
-function router() {
+function router(): void {
   const routePath = location.hash;
 
   if (routePath === '') { //a href에 #만 있는 경우는 값이 없다고 판단함
