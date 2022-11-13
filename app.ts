@@ -39,47 +39,36 @@ const store: Store = {
   feeds: [],
 };
 
-function applyApiMixins(targetClass: any, baseClasses: any[]): void {
-  //믹스인 관련 코드
-  baseClasses.forEach(baseClass => {
-    Object.getOwnPropertyNames(baseClass.prototype).forEach(name => {
-      const descriptor = Object.getOwnPropertyDescriptor(baseClass.prototype, name);
-      
-      if (descriptor) {
-        Object.defineProperty(targetClass.prototype, name, descriptor);
-      }            
-    });
-  });
-};
-
 class Api {
-  getRequest<AjaxResponse>(url: string): AjaxResponse {
-    const ajax = new XMLHttpRequest();
-    ajax.open('GET', url, false); //해커뉴스 API를 가져온다 마지막에 boolean값은 가져오는 데이터를 동기/비동기 처리에 대한 옵션
-    ajax.send(); //데이터가 들어옴
+  ajax: XMLHttpRequest;
+  url: string;
+
+  constructor(url: string) { //초기화 해주는 함수 생성자
+    this.ajax = new XMLHttpRequest();
+    this.url = url;
+  }
+
+  //protected: getRequest 메소드 이름 앞에 붙이면 외부로 인스턴스 객체로 등장하지 않아 호출할 수 없게 됨
+  getRequest<AjaxResponse>(): AjaxResponse {
+    this.ajax.open('GET', this.url, false); //해커뉴스 API를 가져온다 마지막에 boolean값은 가져오는 데이터를 동기/비동기 처리에 대한 옵션
+    this.ajax.send(); //데이터가 들어옴
   
-    return JSON.parse(ajax.response); //JSON형태의 응답값을 객체로 바꿈 (배열)
+    return JSON.parse(this.ajax.response); //JSON형태의 응답값을 객체로 바꿈 (배열)
   }
 }
 
-class NewsFeedApi {
+class NewsFeedApi extends Api {
   getData(): NewsFeed[] {
     //제네릭 문법: <>를 사용. 호출하는 쪽에서 유형을 명시해주면 그 유형을 그대로 반환유형으로 사용함
-    return this.getRequest<NewsFeed[]>(NEWS_URL);
+    return this.getRequest<NewsFeed[]>();
   }
 }
 
-class NewsDetailApi {
-  getData(id: string): NewsDetail {
-    return this.getRequest<NewsDetail>(CONTENT_URL.replace('@id', id));
+class NewsDetailApi extends Api {
+  getData(): NewsDetail {
+    return this.getRequest<NewsDetail>();
   }
 }
-
-interface NewsFeedApi extends Api {};
-interface NewsDetailApi extends Api {};
-
-applyApiMixins(NewsFeedApi, [Api]);
-applyApiMixins(NewsDetailApi, [Api]);
 
 function makeFeeds(feeds: NewsFeed[]): NewsFeed[] {
   for (let i = 0; i <feeds.length; i++) {
@@ -99,7 +88,7 @@ function updateView(html: string): void { //리턴값이 없으면 :void
 
 //글 목록 화면을 재활용하기위해 코드를 묶음
 function newsFeed(): void {
-  const api = new NewsFeedApi(); //클래스 인스턴스를 만들어줌
+  let api = new NewsFeedApi(NEWS_URL); //클래스 인스턴스를 만들어줌
   let newsFeed: NewsFeed[] = store.feeds;
   const newsList: string[] = [];
   // template를 사용해 분리하면 구조를 명확하게 파악 수 있고 복잡도를 줄일 수 있음
@@ -162,54 +151,6 @@ function newsFeed(): void {
   updateView(template);
 }
 
-//글 내용 화면
-function newsDetail(): void {
-  //hashchange: 해쉬가 바뀌었을 때 발생하는 이벤트
-  //window 객체에서 발생
-
-  const id = location.hash.substring(7); //location 객체는 브라우저가 기본으로 제공. 주소와 관련된 다양한 정보 제공
-  const api = new NewsDetailApi();
-  const newsDetail: NewsDetail = api.getData(id);
-  let template = `
-    <div class="bg-gray-600 min-h-screen pb-8">
-      <div class="bg-white text-xl">
-        <div class="mx-auto px-4">
-          <div class="flex justify-between items-center py-6">
-            <div class="flex justify-start">
-              <h1 class="font-extrabold">Hacker News</h1>
-            </div>
-            <div class="items-center justify-end">
-              <a href="#/page/${store.currentPage}" class="text-gray-500">
-                <i class="fa fa-times"></i>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="h-full border rounded-xl bg-white m-6 p-4 ">
-        <h2>${newsDetail.title}</h2>
-        <div class="text-gray-400 h-20">
-          ${newsDetail.content}
-        </div>
-
-        {{__comments__}}
-
-      </div>
-    </div>
-  `;
-
-for (let i = 0; i < store.feeds.length; i++) {
-  if (store.feeds[i].id === Number(id)) {
-    store.feeds[i].read = true;
-    break;
-  }
-}
-
-  //목록 화면을 상세 내용으로 바꿔줌
-  updateView(template.replace('{{__comments__}}', makeComment(newsDetail.comments)));
-};
-
 function makeComment(comments: NewsComment[]): string {
   const commentString = [];
 
@@ -234,6 +175,55 @@ function makeComment(comments: NewsComment[]): string {
 
   return commentString.join('');
 }
+
+//글 내용 화면
+function newsDetail(): void {
+  //hashchange: 해쉬가 바뀌었을 때 발생하는 이벤트
+  //window 객체에서 발생
+
+  const id = location.hash.substring(7); //location 객체는 브라우저가 기본으로 제공. 주소와 관련된 다양한 정보 제공
+  const api = new NewsDetailApi(CONTENT_URL.replace('@id', id)); //@id로 마킹해둔것을 실제 id로 바꿔줌
+  const newsDetail: NewsDetail = api.getData();
+  let template = `
+  <div class="bg-gray-600 min-h-screen pb-8">
+    <div class="bg-white text-xl">
+      <div class="mx-auto px-4">
+        <div class="flex justify-between items-center py-6">
+          <div class="flex justify-start">
+            <h1 class="font-extrabold">Hacker News</h1>
+          </div>
+          <div class="items-center justify-end">
+            <a href="#/page/${store.currentPage}" class="text-gray-500">
+              <i class="fa fa-times"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="h-full border rounded-xl bg-white m-6 p-4 ">
+      <h2>${newsDetail.title}</h2>
+      <div class="text-gray-400 h-20">
+        ${newsDetail.content}
+      </div>
+
+      {{__comments__}}
+
+    </div>
+  </div>
+`;
+
+for (let i = 0; i < store.feeds.length; i++) {
+  if (store.feeds[i].id === Number(id)) {
+    store.feeds[i].read = true;
+    break;
+  }
+}
+
+  //목록 화면을 상세 내용으로 바꿔줌
+  updateView(template.replace('{{__comments__}}', makeComment(newsDetail.comments)));
+};
+
 
 //라우터
 function router(): void {
