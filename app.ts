@@ -39,12 +39,34 @@ const store: Store = {
   feeds: [],
 };
 
-//제네릭 문법: <>를 사용. 호출하는 쪽에서 유형을 명시해주면 그 유형을 그대로 반환유형으로 사용함
-function getData<AjaxResponse>(url: string): AjaxResponse { 
-  ajax.open('GET', url, false); //해커뉴스 API를 가져온다 마지막에 boolean값은 가져오는 데이터를 동기/비동기 처리에 대한 옵션
-  ajax.send(); //데이터가 들어옴
+class Api {
+  url: string;
+  ajax: XMLHttpRequest;
+  constructor(url: string) { //초기화 해주는 함수 생성자
+    this.url = url;
+    this.ajax = new XMLHttpRequest();
+  }
 
-  return JSON.parse(ajax.response); //JSON형태의 응답값을 객체로 바꿈 (배열)
+  //protected: 메소드 이름 앞에 붙이면 외부로 인스턴스 객체로 등장하지 않아 호출할 수 없게 됨
+  protected getRequest<AjaxResponse>(): AjaxResponse {
+    this.ajax.open('GET', this.url, false); //해커뉴스 API를 가져온다 마지막에 boolean값은 가져오는 데이터를 동기/비동기 처리에 대한 옵션
+    this.ajax.send(); //데이터가 들어옴
+  
+    return JSON.parse(this.ajax.response); //JSON형태의 응답값을 객체로 바꿈 (배열)
+  }
+}
+
+class NewsFeedApi extends Api {
+  getData(): NewsFeed[] {
+    //제네릭 문법: <>를 사용. 호출하는 쪽에서 유형을 명시해주면 그 유형을 그대로 반환유형으로 사용함
+    return this.getRequest<NewsFeed[]>();
+  }
+}
+
+class NewsDetailApi extends Api {
+  getData(): NewsFeed[] {
+    return this.getRequest<NewsFeed[]>();
+  }
 }
 
 function makeFeeds(feeds: NewsFeed[]): NewsFeed[] {
@@ -65,6 +87,7 @@ function updateView(html: string): void { //리턴값이 없으면 :void
 
 //글 목록 화면을 재활용하기위해 코드를 묶음
 function newsFeed(): void {
+  const api = new NewsFeedApi(NEWS_URL); //클래스 인스턴스를 만들어줌
   let newsFeed: NewsFeed[] = store.feeds;
   const newsList = [];
   // template를 사용해 분리하면 구조를 명확하게 파악 수 있고 복잡도를 줄일 수 있음
@@ -94,8 +117,8 @@ function newsFeed(): void {
   `;
 
   if (newsFeed.length === 0) {
-    newsFeed = store.feeds = makeFeeds(getData<NewsFeed[]>(NEWS_URL)); 
-    //makeFeeds(getData(NEWS_URL))를 store.feeds, newsFeed에 연속으로 넣을 수 있는 문법
+    newsFeed = store.feeds = makeFeeds(api.getData()); 
+    //makeFeeds()를 store.feeds, newsFeed에 연속으로 넣을 수 있는 문법
   }
 
   for(let i = (store.currentPage -1) * 10; i < store.currentPage * 10; i++) {
@@ -133,7 +156,8 @@ function newsDetail(): void {
   //window 객체에서 발생
 
   const id = location.hash.substring(7); //location 객체는 브라우저가 기본으로 제공. 주소와 관련된 다양한 정보 제공
-  const newsContent = getData<newsDetail>(CONTENT_URL.replace('@id', id)); //@id로 마킹해둔것을 실제 id로 바꿔줌
+  const api = new NewsDetailApi(CONTENT_URL.replace('@id', id)); //@id로 마킹해둔것을 실제 id로 바꿔줌
+  const newsContent = api.getData(); 
   let template = `
   <div class="bg-gray-600 min-h-screen pb-8">
     <div class="bg-white text-xl">
