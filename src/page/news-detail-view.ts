@@ -71,8 +71,9 @@ export default class NewsDetailView extends View {
   
       if (comment.comments.length > 0) {
         this.addHtml(this.makeComment(comment.comments));
-        //재귀 호출: 함수가 자기 자신을 호출하는 것. 끝을 알 수 없는 구조에서 유용하게 사용할 수 있음      }
+        //재귀 호출: 함수가 자기 자신을 호출하는 것. 끝을 알 수 없는 구조에서 유용하게 사용할 수 있음      
         }
+      }
   
     return this.getHtml();
   }
