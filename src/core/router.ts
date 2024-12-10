@@ -1,37 +1,52 @@
-import { RouteInfo } from '../types/';
+import { RouteInfo } from '../types';
 import View from './view';
-
-export default class  Router {
+export default class Router {
+  defaultRoute: RouteInfo | null;
   routeTable: RouteInfo[];
-  defalutRoute: RouteInfo | null;
 
   constructor() {
     window.addEventListener('hashchange', this.route.bind(this));
-
+    this.defaultRoute = null;
     this.routeTable = [];
-    this.defalutRoute = null;
   }
 
-  setDefaultPage(page: View): void {
-    this.defalutRoute = { path: '', page };
+  go = (): void => {
+    this.route();
   }
 
-  addRoutePath(path: string, page: View): void {
-    this.routeTable.push({ path, page });
+  setDefaultPage(page: View, params: RegExp | null = null): void {
+    this.defaultRoute = {
+      path: '', 
+      page, 
+      params,
+    };
   }
 
-  route() {
-    const routePath = location.hash;
+  addRoutePath(path: string, page: View, params: RegExp | null = null): void {
+    this.routeTable.push({ path, page, params });
+  }
 
-    if (routePath === '' && this.defalutRoute) {
-      this.defalutRoute.page.render();
+  private route() {
+    const routePath: string = location.hash;
+    
+    if (routePath === '' && this.defaultRoute) {
+      this.defaultRoute.page.render();
+      return;
     }
 
-    for (const routeInfo of this.routeTable) {
-      if (routePath.indexOf(routeInfo.path) >= 0) {
-        routeInfo.page.render();
-        break;
-      }
+    for(const routeInfo of this.routeTable) {
+      if (routePath.indexOf(routeInfo.path) >= 0) {        
+        if (routeInfo.params) {
+          const parseParams = routePath.match(routeInfo.params);
+
+          if (parseParams) {
+            routeInfo.page.render.apply(null, [parseParams[1]]);
+          }          
+        } else {
+          routeInfo.page.render();
+        }       
+        return;
+      }  
     }
   }
 }

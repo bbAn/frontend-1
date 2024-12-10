@@ -1,11 +1,10 @@
-import View from '../core/view'
+import View from '../core/view';
 
 export interface Store {
-  currentPage: number; //세미클론으로 마무리함
   feeds: NewsFeed[];
+  currentPage: number; //세미클론으로 마무리함
 }
 
-//중복되는 타입들을 모아둠
 export interface News {
   readonly id: number; //readonly: 코드 내에서 다른 값으로 대체하지 못하게 하는 지시어
   readonly time_ago: string;
@@ -16,8 +15,8 @@ export interface News {
 }
 
 export interface NewsFeed extends News {
-  readonly comments_count: number;
   readonly points: number;
+  readonly comments_count: number;
   read?: boolean; //?를 붙이면 선택속성이됨
 }
 
@@ -33,4 +32,5 @@ export interface NewsComment extends News {
 export interface RouteInfo {
   path: string;
   page: View;
+  params: RegExp | null;
 }
