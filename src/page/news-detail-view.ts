@@ -1,6 +1,6 @@
 import View from '../core/view';
 import { NewsDetailApi } from '../core/api';
-import { NewsDetail, NewsComment } from '../types';
+import { NewsDetail, NewsComment, NewsStore } from '../types';
 import { CONTENT_URL } from '../config';
 
 const template = `
@@ -31,32 +31,30 @@ const template = `
 `;
 
 export default class NewsDetailView extends View {
-  constructor(containerId: string) {
-    super(containerId, template);  
+  private store: NewsStore;
+
+  constructor(containerId: string, store: NewsStore) {
+    super(containerId, template);
+
+    this.store = store;
   }
 
   render = (id: string): void => {
     const api = new NewsDetailApi(CONTENT_URL.replace('@id', id));
+    const { title, content, comments } = api.getData();
 
-    for(let i=0; i < window.store.feeds.length; i++) {
-      if (window.store.feeds[i].id === Number(id)) {
-        window.store.feeds[i].read = true;
-        break;
-      }
-    }
-
-    const newsDetail: NewsDetail = api.getData();
     //목록 화면을 상세 내용으로 바꿔줌
-    this.setTemplateData('currentPage', window.store.currentPage.toString());
-    this.setTemplateData('title', newsDetail.title);
-    this.setTemplateData('content', newsDetail.content);
-    this.setTemplateData('comments', this.makeComment(newsDetail.comments));
+    this.store.makeRead(Number(id));
+    this.setTemplateData('currentPage', this.store.currentPage.toString());
+    this.setTemplateData('title', title);
+    this.setTemplateData('content', content);
+    this.setTemplateData('comments', this.makeComment(comments));
 
     this.updateView();
-  }
+  };
 
   private makeComment(comments: NewsComment[]): string {
-    for(let i = 0; i < comments.length; i++) {
+    for (let i = 0; i < comments.length; i++) {
       const comment: NewsComment = comments[i];
 
       this.addHtml(`
@@ -68,13 +66,13 @@ export default class NewsDetailView extends View {
           <p class="text-gray-700">${comment.content}</p>
         </div>      
       `);
-  
+
       if (comment.comments.length > 0) {
         this.addHtml(this.makeComment(comment.comments));
-        //재귀 호출: 함수가 자기 자신을 호출하는 것. 끝을 알 수 없는 구조에서 유용하게 사용할 수 있음      
-        }
+        //재귀 호출: 함수가 자기 자신을 호출하는 것. 끝을 알 수 없는 구조에서 유용하게 사용할 수 있음
       }
-  
+    }
+
     return this.getHtml();
   }
 }
