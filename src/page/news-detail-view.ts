@@ -1,6 +1,6 @@
 import View from '../core/view';
 import { NewsDetailApi } from '../core/api';
-import { NewsDetail, NewsComment, NewsStore } from '../types';
+import { NewsComment, NewsStore } from '../types';
 import { CONTENT_URL } from '../config';
 
 const template = `
@@ -35,7 +35,6 @@ export default class NewsDetailView extends View {
 
   constructor(containerId: string, store: NewsStore) {
     super(containerId, template);
-
     this.store = store;
   }
 

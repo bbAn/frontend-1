@@ -5,7 +5,7 @@ export default class Api {
   url: string;
 
   constructor(url: string) {
-     //초기화 해주는 함수 생성자
+    //초기화 해주는 함수 생성자
     this.ajax = new XMLHttpRequest();
     this.url = url;
   }

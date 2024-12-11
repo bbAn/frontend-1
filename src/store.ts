@@ -1,7 +1,7 @@
 import { NewsFeed, NewsStore } from './types';
 
 export class Store implements NewsStore {
-  private feeds: NewsFeed[]; //private: 노출 되지 않도록함
+  private feeds: NewsFeed[]; // private: 노출 되지 않도록함
   private _currentPage: number; // 내부에서만 사용하는 경우 이름이 겹치지 않도록 _ 사용
 
   constructor() {
@@ -9,7 +9,7 @@ export class Store implements NewsStore {
     this._currentPage = 1;
   }
 
-  //내부에서는 함수로 작동하지만 class 외부에서는 속성처럼 보이게 하는 getter, setter
+  // 내부에서는 함수로 작동하지만 class 외부에서는 속성처럼 보이게 하는 getter, setter
   // 잘못된 값으로 세팅하거나 특정한 범위 내의 값으로만 한정시킬수 있도록 방어할 수 있음
 
   // 외부로부터 데이터를 세팅

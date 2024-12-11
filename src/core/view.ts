@@ -10,7 +10,7 @@ export default abstract class View {
     if (!containerElement) {
       throw '최상위 컨테이너가 없어 UI를 진행하지 못합니다.';
     }
-  
+
     this.container = containerElement;
     this.template = template;
     this.renderTemplate = template;
@@ -37,7 +37,7 @@ export default abstract class View {
     this.renderTemplate = this.renderTemplate.replace(`{{__${key}__}}`, value);
   }
 
-  private clearHtmlList() : void {
+  private clearHtmlList(): void {
     this.htmlList = [];
   }
 

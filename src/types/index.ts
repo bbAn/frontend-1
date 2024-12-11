@@ -24,7 +24,7 @@ export interface News {
 export interface NewsFeed extends News {
   readonly points: number;
   readonly comments_count: number;
-  read?: boolean; //?를 붙이면 선택속성이됨
+  read?: boolean; // ?를 붙이면 선택속성이됨
 }
 
 export interface NewsDetail extends News {

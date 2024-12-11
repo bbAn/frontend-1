@@ -12,5 +12,3 @@ router.setDefaultPage(newsFeedView);
 
 router.addRoutePath('/page/', newsFeedView, /page\/(\d+)/);
 router.addRoutePath('/show/', newsDetailView, /show\/(\d+)/);
-
-router.go();
