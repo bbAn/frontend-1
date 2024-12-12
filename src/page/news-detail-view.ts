@@ -1,6 +1,6 @@
 import View from '../core/view';
 import { NewsDetailApi } from '../core/api';
-import { NewsComment, NewsStore } from '../types';
+import { NewsComment, NewsDetail, NewsStore } from '../types';
 import { CONTENT_URL } from '../config';
 
 const template = `
@@ -40,16 +40,20 @@ export default class NewsDetailView extends View {
 
   render = (id: string): void => {
     const api = new NewsDetailApi(CONTENT_URL.replace('@id', id));
-    const { title, content, comments } = api.getData();
 
-    //목록 화면을 상세 내용으로 바꿔줌
-    this.store.makeRead(Number(id));
-    this.setTemplateData('currentPage', this.store.currentPage.toString());
-    this.setTemplateData('title', title);
-    this.setTemplateData('content', content);
-    this.setTemplateData('comments', this.makeComment(comments));
+    // 콜백함수 구조로 변경
+    api.getDataWithPromise((data: NewsDetail) => {
+      const { title, content, comments } = data;
 
-    this.updateView();
+      //목록 화면을 상세 내용으로 바꿔줌
+      this.store.makeRead(Number(id));
+      this.setTemplateData('currentPage', this.store.currentPage.toString());
+      this.setTemplateData('title', title);
+      this.setTemplateData('content', content);
+      this.setTemplateData('comments', this.makeComment(comments));
+
+      this.updateView();
+    });
   };
 
   private makeComment(comments: NewsComment[]): string {
