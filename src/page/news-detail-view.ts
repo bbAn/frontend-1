@@ -38,22 +38,19 @@ export default class NewsDetailView extends View {
     this.store = store;
   }
 
-  render = (id: string): void => {
+  render = async (id: string): Promise<void> => {
     const api = new NewsDetailApi(CONTENT_URL.replace('@id', id));
 
-    // 콜백함수 구조로 변경
-    api.getDataWithPromise((data: NewsDetail) => {
-      const { title, content, comments } = data;
+    const { title, content, comments } = await api.getData();
 
-      //목록 화면을 상세 내용으로 바꿔줌
-      this.store.makeRead(Number(id));
-      this.setTemplateData('currentPage', this.store.currentPage.toString());
-      this.setTemplateData('title', title);
-      this.setTemplateData('content', content);
-      this.setTemplateData('comments', this.makeComment(comments));
+    //목록 화면을 상세 내용으로 바꿔줌
+    this.store.makeRead(Number(id));
+    this.setTemplateData('currentPage', this.store.currentPage.toString());
+    this.setTemplateData('title', title);
+    this.setTemplateData('content', content);
+    this.setTemplateData('comments', this.makeComment(comments));
 
-      this.updateView();
-    });
+    this.updateView();
   };
 
   private makeComment(comments: NewsComment[]): string {

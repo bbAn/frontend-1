@@ -39,22 +39,13 @@ export default class NewsFeedView extends View {
     this.api = new NewsFeedApi(NEWS_URL); //클래스 인스턴스를 만들어줌
   }
 
-  render = (page: string = '1'): void => {
+  render = async (page: string = '1'): Promise<void> => {
     this.store.currentPage = Number(page);
 
-    // router가 render 함수를 호출할 때 생성자에서 호출한 데이터의 응답이 보장이 안되기 때문에
-    // 생성자에서 데이터를 호출하는 부분을 render 안으로 이동
     if (!this.store.hasFeeds) {
-      this.api.getDataWithPromise((feeds: NewsFeed[]) => {
-        this.store.setFeeds(feeds);
-        this.renderView();
-      });
+      this.store.setFeeds(await this.api.getData());
     }
-    this.renderView();
-  };
 
-  // ui 코드 분리
-  renderView = () => {
     for (let i = (this.store.currentPage - 1) * 10; i < this.store.currentPage * 10; i++) {
       const { id, title, comments_count, user, points, time_ago, read } = this.store.getFeed(i);
 
